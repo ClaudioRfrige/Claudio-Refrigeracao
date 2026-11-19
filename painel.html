@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Painel | Cláudio Refrigeração</title><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#12235A">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@1,800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#12235A;--blue:#0096E2;--ink:#1B2430;--muted:#445063;--line:#E1E9F0;--paper:#F5F9FC}
+*{box-sizing:border-box}body{margin:0;font-family:Barlow,"Segoe UI",system-ui,sans-serif;font-size:17px;color:var(--ink);background:var(--paper)}
+header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5}
+header b{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-style:italic;font-weight:800;font-size:24px}
+header button{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;min-height:44px;cursor:pointer}
+main{max-width:640px;margin:0 auto;padding:16px 14px 50px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.tabs button{font:inherit;font-weight:700;padding:12px 4px;border:1.5px solid #C9D6E2;border-radius:12px;background:#fff;color:var(--navy);min-height:50px;cursor:pointer}
+.tabs button.on{background:var(--navy);border-color:var(--navy);color:#fff}.tabs i{font-style:normal;background:#FFC83D;color:#3a2a00;border-radius:10px;padding:1px 8px;margin-left:4px;font-size:14px}
+.c{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 4px 14px rgba(18,35,90,.06)}
+.c .d{font-weight:700;color:var(--navy);font-size:18px}.c .s{display:inline-block;font-size:13.5px;font-weight:700;border-radius:20px;padding:3px 10px;margin-left:6px;background:#FFF1C9;color:#6b4b00}
+.c .s.Confirmado{background:#D7F5E1;color:#0b5a2b}.c .s.Recusado,.c .s.Cancelado{background:#FBDADA;color:#8a1c1c}.c .s.Concluído{background:#DCE8F7;color:var(--navy)}
+.c p{margin:6px 0;font-size:16px}.c small{color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.row.one{grid-template-columns:1fr}
+.b{font:inherit;font-weight:700;border:0;border-radius:12px;min-height:48px;color:#fff;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:8px}
+.ok{background:#1E9E55}.no{background:#B3261E}.wa{background:#25D366}.nv{background:var(--navy)}.gr{background:#6B7785}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+.lg{max-width:360px;margin:60px auto;background:#fff;padding:24px;border-radius:18px;border:1px solid var(--line)}
+.lg input{font:inherit;width:100%;padding:13px;border:1.5px solid #C9D6E2;border-radius:12px;min-height:50px;margin:10px 0}.lg h1{margin:0;color:var(--navy);font-size:24px}.err{color:#B3261E;min-height:22px;margin:0}
+</style></head><body>
+<header><b>Agenda do Cláudio</b><button id="rf" hidden>Atualizar</button></header>
+<main id="m"></main>
+<script>
+(function(){
+var API='https://script.google.com/macros/s/AKfycbxW3EAkOSoLzKlyQNnFCOhNRiwC_LYeTq28ayp7g1GrHQdff4OgmQ5pVlijVPj0Fqjq/exec';   // cole aqui o link do Apps Script
+var WHATS_PREFIX='55';
+var m=document.getElementById('m'),rf=document.getElementById('rf'),pin=localStorage.getItem('pin')||'',data=[],tab='p',MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'],SEM=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function call(o){o.pin=pin;return fetch(API,{method:'POST',body:JSON.stringify(o)}).then(function(r){return r.json()})}
+function login(msg){rf.hidden=true;m.innerHTML='<form class="lg" id="lf"><h1>Entrar no painel</h1><input type="password" id="pw" placeholder="Senha" autocomplete="current-password"><p class="err">'+(msg||'')+'</p><button class="b nv" style="width:100%">Entrar</button></form>';
+document.getElementById('lf').onsubmit=function(e){e.preventDefault();pin=document.getElementById('pw').value;load()}}
+function load(){if(!API){m.innerHTML='<p class="empty">Falta colar o link do Apps Script no arquivo painel.html.</p>';return}
+m.innerHTML='<p class="empty">Carregando...</p>';
+call({acao:'listar'}).then(function(j){if(!j.ok){localStorage.removeItem('pin');login(j.erro==='senha'?'Senha incorreta.':'Erro ao carregar.');return}localStorage.setItem('pin',pin);data=j.itens;rf.hidden=false;draw()}).catch(function(){m.innerHTML='<p class="empty">Sem conexão. Toque em Atualizar.</p>';rf.hidden=false})}
+function dl(i){var p=i.iso.split('-');var d=new Date(+p[0],p[1]-1,+p[2]);return SEM[d.getDay()]+', '+d.getDate()+' '+MES[d.getMonth()]+' às '+i.hr}
+function tel(z){var n=z.replace(/\D/g,'');return n.length<=11?WHATS_PREFIX+n:n}
+function txt(i){var t={Pendente:'Olá, '+i.nome+'! Aqui é o Cláudio Refrigeração. Recebi seu pedido de visita ('+i.sv+') para '+dl(i)+'.',
+Confirmado:'Olá, '+i.nome+'! Sua visita está *confirmada*: '+i.sv+', '+dl(i)+'. Qualquer mudança, é só avisar por aqui. Cláudio Refrigeração.',
+Recusado:'Olá, '+i.nome+'! Não consigo atender '+dl(i)+'. Podemos marcar em outro dia ou horário? Cláudio Refrigeração.',
+Cancelado:'Olá, '+i.nome+'! Sua visita de '+dl(i)+' foi cancelada. Se quiser remarcar, é só me chamar. Cláudio Refrigeração.','Concluído':'Olá, '+i.nome+'! Obrigado por escolher a Cláudio Refrigeração. Qualquer dúvida sobre o serviço, é só chamar!'};return t[i.status]||''}
+function card(i){var b=i.status==='Pendente'?'<div class="row"><button class="b ok" data-a="Confirmado" data-id="'+i.id+'">Confirmar</button><button class="b no" data-a="Recusado" data-id="'+i.id+'">Recusar</button></div>':
+i.status==='Confirmado'?'<div class="row"><button class="b nv" data-a="Concluído" data-id="'+i.id+'">Concluído</button><button class="b gr" data-a="Cancelado" data-id="'+i.id+'">Cancelar</button></div>':'';
+return '<div class="c"><span class="d">'+esc(dl(i))+'</span><span class="s '+i.status+'">'+i.status+'</span><p><b>'+esc(i.nome)+'</b> · '+esc(i.sv)+'</p><p>'+esc(i.local)+'</p>'+(i.obs?'<p><small>'+esc(i.obs)+'</small></p>':'')+'<p><small>Pedido '+esc(i.id)+' em '+esc(i.criado)+'</small></p>'+b+
+'<div class="row one"><a class="b wa" target="_blank" rel="noopener" href="https://wa.me/'+tel(i.zap)+'?text='+encodeURIComponent(txt(i))+'">'+(i.status==='Pendente'?'Responder no WhatsApp':i.status==='Confirmado'?'Avisar cliente: confirmado':'Mandar mensagem')+'</a></div></div>'}
+function draw(){var key=function(i){return i.iso+i.hr},pend=data.filter(function(i){return i.status==='Pendente'}).sort(function(a,b){return key(a)<key(b)?-1:1}),
+ag=data.filter(function(i){return i.status==='Confirmado'}).sort(function(a,b){return key(a)<key(b)?-1:1}),
+hi=data.filter(function(i){return ['Pendente','Confirmado'].indexOf(i.status)<0}).sort(function(a,b){return key(a)<key(b)?1:-1});
+var L={p:pend,a:ag,h:hi}[tab];
+m.innerHTML='<div class="tabs"><button data-t="p" class="'+(tab==='p'?'on':'')+'">Pendentes<i>'+pend.length+'</i></button><button data-t="a" class="'+(tab==='a'?'on':'')+'">Agendados<i>'+ag.length+'</i></button><button data-t="h" class="'+(tab==='h'?'on':'')+'">Histórico</button></div>'+(L.length?L.map(card).join(''):'<p class="empty">Nada por aqui.</p>')}
+m.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;
+if(t.dataset.t){tab=t.dataset.t;draw()}
+else if(t.dataset.a){t.disabled=true;t.textContent='Salvando...';call({acao:'atualizar',id:t.dataset.id,status:t.dataset.a}).then(function(j){if(j.ok){data.forEach(function(i){if(i.id===t.dataset.id)i.status=t.dataset.a});draw()}else{alert('Não foi possível salvar.');draw()}}).catch(function(){alert('Sem conexão.');draw()})}});
+rf.onclick=load;setInterval(function(){if(pin&&API&&!document.hidden&&m.querySelector('.tabs'))call({acao:'listar'}).then(function(j){if(j.ok){data=j.itens;draw()}}).catch(function(){})},60000);
+if(pin)load();else login();
+})();
+</script></body></html>
