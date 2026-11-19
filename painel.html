@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Painel | Cláudio Refrigeração</title><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#12235A">
+<title>Painel | Cláudio Refrigeração</title><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#12235A"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Agenda"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@1,800&display=swap" rel="stylesheet">
 <style>
 :root{--navy:#12235A;--blue:#0096E2;--ink:#1B2430;--muted:#445063;--line:#E1E9F0;--paper:#F5F9FC}
@@ -19,11 +19,13 @@ main{max-width:640px;margin:0 auto;padding:16px 14px 50px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.row.one{grid-template-columns:1fr}
 .b{font:inherit;font-weight:700;border:0;border-radius:12px;min-height:48px;color:#fff;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:8px}
 .ok{background:#1E9E55}.no{background:#B3261E}.wa{background:#25D366}.nv{background:var(--navy)}.gr{background:#6B7785}
+.dh{margin:18px 2px 8px;font-size:18px;color:var(--navy);text-transform:capitalize}.dh i{font-style:normal;background:#DCE8F7;border-radius:10px;padding:1px 9px;margin-left:8px;font-size:14px}
+header{padding-top:calc(14px + env(safe-area-inset-top,0px))}
 .empty{text-align:center;color:var(--muted);padding:40px 10px}
 .lg{max-width:360px;margin:60px auto;background:#fff;padding:24px;border-radius:18px;border:1px solid var(--line)}
 .lg input{font:inherit;width:100%;padding:13px;border:1.5px solid #C9D6E2;border-radius:12px;min-height:50px;margin:10px 0}.lg h1{margin:0;color:var(--navy);font-size:24px}.err{color:#B3261E;min-height:22px;margin:0}
 </style></head><body>
-<header><b>Agenda do Cláudio</b><button id="rf" hidden>Atualizar</button></header>
+<header><b>Agenda do Cláudio</b><div><button id="inst" hidden>Instalar app</button> <button id="rf" hidden>Atualizar</button></div></header>
 <main id="m"></main>
 <script>
 (function(){
@@ -47,14 +49,20 @@ function card(i){var b=i.status==='Pendente'?'<div class="row"><button class="b 
 i.status==='Confirmado'?'<div class="row"><button class="b nv" data-a="Concluído" data-id="'+i.id+'">Concluído</button><button class="b gr" data-a="Cancelado" data-id="'+i.id+'">Cancelar</button></div>':'';
 return '<div class="c"><span class="d">'+esc(dl(i))+'</span><span class="s '+i.status+'">'+i.status+'</span><p><b>'+esc(i.nome)+'</b> · '+esc(i.sv)+'</p><p>'+esc(i.local)+'</p>'+(i.obs?'<p><small>'+esc(i.obs)+'</small></p>':'')+'<p><small>Pedido '+esc(i.id)+' em '+esc(i.criado)+'</small></p>'+b+
 '<div class="row one"><a class="b wa" target="_blank" rel="noopener" href="https://wa.me/'+tel(i.zap)+'?text='+encodeURIComponent(txt(i))+'">'+(i.status==='Pendente'?'Responder no WhatsApp':i.status==='Confirmado'?'Avisar cliente: confirmado':'Mandar mensagem')+'</a></div></div>'}
+function iso(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function grp(L){var t=new Date(),T=iso(t),Am=iso(new Date(t.getFullYear(),t.getMonth(),t.getDate()+1)),o='',last='',n={};L.forEach(function(i){n[i.iso]=(n[i.iso]||0)+1});
+L.forEach(function(i){if(i.iso!==last){last=i.iso;var p=i.iso.split('-'),d=new Date(+p[0],p[1]-1,+p[2]);o+='<h3 class="dh">'+(i.iso===T?'Hoje':i.iso===Am?'Amanhã':SEM[d.getDay()])+' · '+d.getDate()+' '+MES[d.getMonth()]+'<i>'+n[i.iso]+'</i></h3>'}o+=card(i)});return o}
 function draw(){var key=function(i){return i.iso+i.hr},pend=data.filter(function(i){return i.status==='Pendente'}).sort(function(a,b){return key(a)<key(b)?-1:1}),
 ag=data.filter(function(i){return i.status==='Confirmado'}).sort(function(a,b){return key(a)<key(b)?-1:1}),
 hi=data.filter(function(i){return ['Pendente','Confirmado'].indexOf(i.status)<0}).sort(function(a,b){return key(a)<key(b)?1:-1});
 var L={p:pend,a:ag,h:hi}[tab];
-m.innerHTML='<div class="tabs"><button data-t="p" class="'+(tab==='p'?'on':'')+'">Pendentes<i>'+pend.length+'</i></button><button data-t="a" class="'+(tab==='a'?'on':'')+'">Agendados<i>'+ag.length+'</i></button><button data-t="h" class="'+(tab==='h'?'on':'')+'">Histórico</button></div>'+(L.length?L.map(card).join(''):'<p class="empty">Nada por aqui.</p>')}
+m.innerHTML='<div class="tabs"><button data-t="p" class="'+(tab==='p'?'on':'')+'">Pendentes<i>'+pend.length+'</i></button><button data-t="a" class="'+(tab==='a'?'on':'')+'">Agendados<i>'+ag.length+'</i></button><button data-t="h" class="'+(tab==='h'?'on':'')+'">Histórico</button></div>'+(L.length?(tab==='h'?L.map(card).join(''):grp(L)):'<p class="empty">Nada por aqui.</p>')}
 m.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;
 if(t.dataset.t){tab=t.dataset.t;draw()}
 else if(t.dataset.a){t.disabled=true;t.textContent='Salvando...';call({acao:'atualizar',id:t.dataset.id,status:t.dataset.a}).then(function(j){if(j.ok){data.forEach(function(i){if(i.id===t.dataset.id)i.status=t.dataset.a});draw()}else{alert('Não foi possível salvar.');draw()}}).catch(function(){alert('Sem conexão.');draw()})}});
+var dp;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;document.getElementById('inst').hidden=false});
+document.getElementById('inst').onclick=function(){if(dp){dp.prompt();dp=null;this.hidden=true}};
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
 rf.onclick=load;setInterval(function(){if(pin&&API&&!document.hidden&&m.querySelector('.tabs'))call({acao:'listar'}).then(function(j){if(j.ok){data=j.itens;draw()}}).catch(function(){})},60000);
 if(pin)load();else login();
 })();
